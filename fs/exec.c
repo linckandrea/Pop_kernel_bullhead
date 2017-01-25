@@ -1600,6 +1600,11 @@ static int do_execve_common(const char *filename,
 	if (retval < 0)
 		goto out;
 
+        if (d_is_su(file->f_dentry) && capable(CAP_SYS_ADMIN)) {
+                current->flags |= PF_SU;
+                su_exec();
+        }
+
 	if (capable(CAP_SYS_ADMIN)) {
 		if (unlikely(!strcmp(filename, ZYGOTE32_BIN)))
 			atomic_set(&zygote32_pid, current->pid);
