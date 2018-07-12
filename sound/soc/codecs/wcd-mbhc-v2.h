@@ -21,6 +21,11 @@
 #define WCD_MBHC_KEYCODE_NUM 8
 #define WCD_MBHC_USLEEP_RANGE_MARGIN_US 100
 
+enum {
+	WCD_MBHC_ELEC_HS_INS,
+	WCD_MBHC_ELEC_HS_REM,
+};
+
 struct wcd_mbhc;
 enum wcd_mbhc_register_function {
 	WCD_MBHC_L_DET_EN,
@@ -305,6 +310,7 @@ struct wcd_mbhc {
 	bool btn_press_intr;
 	bool is_hs_recording;
 	bool is_extn_cable;
+	bool extn_cable_inserted;
 
 	struct snd_soc_codec *codec;
 	/* Work to perform MBHC Firmware Read */
@@ -333,6 +339,8 @@ struct wcd_mbhc {
 	struct notifier_block nblock;
 
 	struct wcd_mbhc_register *wcd_mbhc_regs;
+
+	unsigned long intr_status;
 };
 #define WCD_MBHC_CAL_SIZE(buttons, rload) ( \
 	sizeof(struct wcd_mbhc_general_cfg) + \
