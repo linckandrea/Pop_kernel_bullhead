@@ -1,5 +1,6 @@
-
-/* Copyright (c) 2012-2014, The Linux Foundation. All rights reserved.
+/*
+ * Copyright (c) 2012-2014, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2016, jollaman999 <admin@jollaman999.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -191,7 +192,7 @@
 #define RGB_LED_DISABLE			0x00
 #define RGB_LED_MIN_MS			50
 #define RGB_LED_MAX_MS			10000
-#define RGB_LED_RAMP_STEP_COUNT	5
+#define RGB_LED_RAMP_STEP_COUNT	8
 
 #define MPP_MAX_LEVEL			LED_FULL
 #define LED_MPP_MODE_CTRL(base)		(base + 0x40)
@@ -1739,38 +1740,68 @@ static int qpnp_kpdbl_set(struct qpnp_led_data *led)
 	return 0;
 }
 
+extern int mdss_backlight_value_percentage;
+
 static int rgb_duration_config(struct qpnp_led_data *led)
 {
 	int rc = 0;
 	int i;
+	int low_brightness;
 	unsigned long on_ms = led->rgb_cfg->on_ms;
 	unsigned long off_ms = led->rgb_cfg->off_ms;
 	unsigned long ramp_step_ms, num_duty_pcts;
-	struct pwm_config_data  *pwm_cfg = led->rgb_cfg->pwm_cfg;
+	struct pwm_config_data *pwm_cfg = led->rgb_cfg->pwm_cfg;
 
-	if (!on_ms) {
+	if (!on_ms)
 		return -EINVAL;
-	} else if (!off_ms) {
-		/* implement always on
-		 * note:
-		 * rgb_on_off_ms_store() bumps on_ms=0 up to RGB_LED_MIN_MS
-		 * so setting ms on/off to 0/0 in /sys results in seeing
-		 * 50/0 by the time we get here
-		 */
-		ramp_step_ms = 1000;
-		num_duty_pcts = 1;
-		pwm_cfg->duty_cycles->duty_pcts[0] =
-			(led->cdev.brightness *
-			100) / RGB_MAX_LEVEL;
-	} else {
-		ramp_step_ms = on_ms / 20;
-		ramp_step_ms = (ramp_step_ms < 5)? 5 : ramp_step_ms;
-		num_duty_pcts = RGB_LED_RAMP_STEP_COUNT;
 
+	// off_ms = 0 -> max = steps(8) * low_brightness
+	// off_ms > 0 -> max = (steps(8) - 1) * low_brightness
+	if (mdss_backlight_value_percentage >= 0 &&
+			mdss_backlight_value_percentage < 20) {
+		if (!off_ms)
+			low_brightness = 2; // max = 16
+		else
+			low_brightness = 2; // max = 14
+	} else if (mdss_backlight_value_percentage >= 20 &&
+			mdss_backlight_value_percentage < 35) {
+		if (!off_ms)
+			low_brightness = 6; // max = 48
+		else
+			low_brightness = 7; // max = 49
+	} else if (mdss_backlight_value_percentage >= 35 &&
+			mdss_backlight_value_percentage < 50) {
+		if (!off_ms)
+			low_brightness = 9; // max = 72
+		else
+			low_brightness = 10; // max = 70
+	} else {
+		if (!off_ms)
+			low_brightness = 12; // max = 96
+		else
+			low_brightness = 14; // max = 98
+	}
+
+	num_duty_pcts = RGB_LED_RAMP_STEP_COUNT;
+
+	if (!off_ms) { // Charging
+		ramp_step_ms = 265;
+
+		/* min brightness is low_brightness */
 		for (i = 0; i < num_duty_pcts; i++) {
 			pwm_cfg->duty_cycles->duty_pcts[i] =
-				(led->cdev.brightness * 25 *
-				(num_duty_pcts-i-1)) / RGB_MAX_LEVEL;
+				(led->cdev.brightness * low_brightness *
+				(num_duty_pcts - i)) / RGB_MAX_LEVEL;
+		}
+	} else { // Notification
+		ramp_step_ms = on_ms / 20;
+		ramp_step_ms = (ramp_step_ms < 5)? 5 : ramp_step_ms;
+
+		/* min brightness is 0 */
+		for (i = 0; i < num_duty_pcts; i++) {
+			pwm_cfg->duty_cycles->duty_pcts[i] =
+				(led->cdev.brightness * low_brightness *
+				(num_duty_pcts - i - 1)) / RGB_MAX_LEVEL;
 		}
 	}
 
@@ -1791,19 +1822,39 @@ static int rgb_duration_config(struct qpnp_led_data *led)
 		break;
 	}
 
+	/*
+	 * Index range
+	 *
+	 * low = start_idx + 1, high = start_idx + length
+	 *
+	 * < Length = 5 >	< Length = 8 >
+	 * R : 17~21		R : 17~24
+	 * G : 9~13		G : 9~16
+	 * B : 1~5		B : 1~8
+	 *
+	 * So, max length of RGB_LED_RAMP_STEP_COUNT is 8.
+	 */
+
 	pwm_cfg->lut_params.idx_len = pwm_cfg->duty_cycles->num_duty_pcts;
-	if (on_ms > (ramp_step_ms*num_duty_pcts * 2))
+	if (!off_ms)
+		pwm_cfg->lut_params.lut_pause_lo = ramp_step_ms;
+	else if (on_ms > (ramp_step_ms*num_duty_pcts * 2))
 		pwm_cfg->lut_params.lut_pause_lo =
 				on_ms - (ramp_step_ms * num_duty_pcts * 2);
 	else
 		pwm_cfg->lut_params.lut_pause_lo = 0;
-	pwm_cfg->lut_params.lut_pause_hi = off_ms;
-	pwm_cfg->lut_params.flags = PM_PWM_LUT_RAMP_UP;
+
+	if (!off_ms)
+		pwm_cfg->lut_params.lut_pause_hi = ramp_step_ms;
+	else
+		pwm_cfg->lut_params.lut_pause_hi = off_ms;
+
+	pwm_cfg->lut_params.flags = PM_PWM_LUT_RAMP_UP |
+				PM_PWM_LUT_LOOP | PM_PWM_LUT_REVERSE;
 	if (pwm_cfg->lut_params.lut_pause_lo)
 		pwm_cfg->lut_params.flags |= PM_PWM_LUT_PAUSE_LO_EN;
 	if (pwm_cfg->lut_params.lut_pause_hi)
-		pwm_cfg->lut_params.flags |= PM_PWM_LUT_PAUSE_HI_EN |
-				PM_PWM_LUT_LOOP | PM_PWM_LUT_REVERSE;
+		pwm_cfg->lut_params.flags |= PM_PWM_LUT_PAUSE_HI_EN;
 
 	rc = pwm_lut_config(pwm_cfg->pwm_dev,
 				pwm_cfg->pwm_period_us,
@@ -4450,4 +4501,3 @@ module_exit(qpnp_led_exit);
 MODULE_DESCRIPTION("QPNP LEDs driver");
 MODULE_LICENSE("GPL v2");
 MODULE_ALIAS("leds:leds-qpnp");
-
