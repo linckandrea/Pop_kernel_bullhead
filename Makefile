@@ -376,6 +376,7 @@ KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -mcpu=cortex-a57.cortex-a53 -mtune=cortex-a57.cortex-a53 \
 		   -Wno-format-security \
 		   -fno-delete-null-pointer-checks \
+                   -g0 -DNDEBUG \
 		   -std=gnu89
 
 KBUILD_AFLAGS_KERNEL :=
