@@ -581,6 +581,15 @@ KBUILD_CFLAGS  += $(call cc-disable-warning,maybe-uninitialized,)
 # Disable unused-constant-variable warnings
 KBUILD_CFLAGS	+= $(call cc-disable-warning,unused-const-variable,)
 
+# Disable attribute-alias warnings
+KBUILD_CFLAGS  += $(call cc-disable-warning, attribute-alias)
+
+# Disable stringop-truncation warnings
+KBUILD_CFLAGS += $(call cc-disable-warning, stringop-truncation)
+
+# Disable packed-not-aligned warnings
+KBUILD_CFLAGS += $(call cc-disable-warning, packed-not-aligned)
+
 # Disable format-truncation warnings
 KBUILD_CFLAGS   += $(call cc-disable-warning,format-truncation,)
 
