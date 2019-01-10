@@ -137,7 +137,7 @@ BUILD_DEBUG_VERSION := 0
 BUILD_DIAG_VERSION := 1
 
 #Do we panic on bug?  default is to warn
-PANIC_ON_BUG := 1
+PANIC_ON_BUG := 0
 
 #Re-enable wifi on WDI timeout
 RE_ENABLE_WIFI_ON_WDI_TIMEOUT := 0
@@ -1501,6 +1501,9 @@ CDEFINES += -DFEATURE_DPTRACE_ENABLE
 endif
 
 KBUILD_CPPFLAGS += $(CDEFINES)
+
+# Use Os because we use o2 globally
+EXTRA_CFLAGS += -Os
 
 # If the module name is not "wlan", then the define MULTI_IF_NAME to be the
 # same a the QCA CHIP name. The host driver will then append MULTI_IF_NAME to
