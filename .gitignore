@@ -63,6 +63,7 @@ modules.builtin
 include/config
 include/generated
 arch/*/include/generated
+AnyKernel3/
 
 # stgit generated dirs
 patches-*
