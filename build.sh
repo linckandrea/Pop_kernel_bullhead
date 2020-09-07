@@ -23,3 +23,9 @@ echo
 echo "Build The Good Stuff"
 echo 
 make O=out -j$(nproc --all)
+
+rm ./AnyKernel3/Image.gz-dtb
+cp ./out/arch/arm64/boot/Image.gz-dtb ./AnyKernel3
+cd AnyKernel3
+rm ./Pop_kernel-bullhead-O-rx-x.zip
+zip -r9 Pop_kernel-bullhead-O-rx-x.zip * -x .git README.md *placeholder
