@@ -38,8 +38,8 @@ dump_boot;
 # begin ramdisk changes
 
 # init.pop.rc
-remove_line "import init.pop.rc";
-remove_line "init.pop.rc";
+remove_line init.bullhead.rc "import init.pop.rc";
+remove_line init.bullhead.rc "init.pop.rc";
 insert_line init.bullhead.rc "init.pop.rc" after "import init.bullhead.ramdump.rc" "import init.pop.rc";
 
 # end ramdisk changes
