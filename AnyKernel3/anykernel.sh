@@ -37,6 +37,9 @@ dump_boot;
 
 # begin ramdisk changes
 
+# init.pop.rc
+insert_line init.bullhead.rc "init.pop.rc" after "import init.bullhead.ramdump.rc" "init.pop.rc";
+
 # end ramdisk changes
 
 write_boot;
