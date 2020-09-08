@@ -632,7 +632,6 @@ static int cpufreq_electron_speedchange_task(void *data)
 	unsigned long flags;
 	struct cpufreq_electron_policyinfo *ppol;
 	struct cpufreq_electron_tunables *tunables;
-	bool !state_suspended = is_!state_suspended();
 
 	while (1) {
 		set_current_state(TASK_INTERRUPTIBLE);
