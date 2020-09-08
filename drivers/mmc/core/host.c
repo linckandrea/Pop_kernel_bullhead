@@ -641,10 +641,9 @@ static ssize_t store_enable(struct device *dev,
 {
 	struct mmc_host *host = cls_dev_to_mmc_host(dev);
 	unsigned long value, freq;
-	int retval = -EINVAL;
 
 	if (!host)
-		goto out;
+		return -EINVAL;
 
 	/* Not safe against removal of the card */
 	if (host->card)
@@ -652,7 +651,7 @@ static ssize_t store_enable(struct device *dev,
 
 	mmc_claim_host(host);
 	if (!host->card || kstrtoul(buf, 0, &value))
-		goto err;
+		return -EINVAL;
 
 	if (value && !mmc_can_scale_clk(host)) {
 		host->caps2 |= MMC_CAP2_CLK_SCALE;
@@ -686,8 +685,8 @@ err:
 	/* Not safe against removal of the card */
 	if (host->card)
 		mmc_rpm_release(host, &host->card->dev);
-out:
-	return retval;
+
+	return count;
 }
 
 static ssize_t show_scale_down_in_low_wr_load(struct device *dev,
@@ -929,7 +928,7 @@ int mmc_add_host(struct mmc_host *host)
 	host->clk_scaling.up_threshold = 35;
 	host->clk_scaling.down_threshold = 5;
 	host->clk_scaling.polling_delay_ms = 100;
-	host->clk_scaling.scale_down_in_low_wr_load = false;
+	host->clk_scaling.scale_down_in_low_wr_load = true;
 
 	err = sysfs_create_group(&host->class_dev.kobj, &clk_scaling_attr_grp);
 	if (err)
