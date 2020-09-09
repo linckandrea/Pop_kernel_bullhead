@@ -651,39 +651,6 @@ static ssize_t doubletap2wake_dump(struct device *dev,
 static DEVICE_ATTR(doubletap2wake, (S_IWUSR|S_IRUGO),
 	doubletap2wake_show, doubletap2wake_dump);
 	
-static ssize_t camera_gesture_show(struct device *dev,
-		struct device_attribute *attr, char *buf)
-{
-	size_t count = 0;
-
-	count += sprintf(buf, "%d\n", camera_switch);
-
-	return count;
-}
-
-static ssize_t camera_gesture_dump(struct device *dev,
-		struct device_attribute *attr, const char *buf, size_t count)
-{
-	sscanf(buf, "%d ", &camera_switch_temp);
-	if (camera_switch_temp < 0 || camera_switch_temp > 1)
-		camera_switch_temp = 0;
-
-	if (!scr_suspended())
-		camera_switch = camera_switch_temp;
-	else
-		camera_switch_changed = true;
-
-	if (scr_suspended() && (!s2w_switch || !s2w_switch_temp) &&
-			(!dt2w_switch || !dt2w_switch_temp) && !camera_switch_temp) {
-		timeout_pwrtrigger();
-	}
-
-	return count;
-}
-
-static DEVICE_ATTR(camera_gesture, (S_IWUSR|S_IRUGO),
-	camera_gesture_show, camera_gesture_dump);
-
 #if (WAKE_GESTURES_ENABLED)
 static ssize_t wake_gestures_show(struct device *dev,
 		struct device_attribute *attr, char *buf)
@@ -795,10 +762,6 @@ static int __init wake_gestures_init(void)
 	rc = sysfs_create_file(android_touch_kobj, &dev_attr_vib_strength.attr);
 	if (rc) {
 		pr_warn("%s: sysfs_create_file failed for vib_strength\n", __func__);
-	}
-	rc = sysfs_create_file(android_touch_kobj, &dev_attr_camera_gesture.attr);
-	if (rc) {
-		pr_warn("%s: sysfs_create_file failed for camera_gesture\n", __func__);
 	}
 #if (WAKE_GESTURES_ENABLED)
 	rc = sysfs_create_file(android_touch_kobj, &dev_attr_wake_gestures.attr);
