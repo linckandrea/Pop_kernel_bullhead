@@ -30,7 +30,6 @@
 #include <linux/slab.h>
 #include <linux/rbtree.h>
 #include <linux/memory.h>
-#include <linux/module.h>
 #include <linux/mmu_notifier.h>
 #include <linux/swap.h>
 #include <linux/ksm.h>
@@ -230,10 +229,6 @@ static unsigned int ksm_thread_sleep_millisecs = 20;
 
 /* Boolean to indicate whether to use deferred timer or not */
 static bool use_deferred_timer;
-
-/* Boolean to indicate whether to use "check page before scanning feature" or not */
-static bool use_check_page_before_scanning = true;
-module_param(use_check_page_before_scanning, bool, 0644);
 
 #ifdef CONFIG_NUMA
 /* Zeroed when merging across nodes is not allowed */
@@ -678,9 +673,7 @@ static void remove_rmap_item_from_tree(struct rmap_item *rmap_item)
 		 */
 		age = (unsigned char)(ksm_scan.seqnr - rmap_item->address);
 #ifndef CONFIG_KSM_CHECK_PAGE
-		if (use_check_page_before_scanning) {
-			BUG_ON(age > 1);
-		}
+		BUG_ON(age > 1);
 #endif
 		if (!age)
 			rb_erase(&rmap_item->node,
@@ -1789,10 +1782,7 @@ static void ksm_do_scan(unsigned int scan_npages)
 		rmap_item = scan_get_next_rmap_item(&page);
 		if (!rmap_item)
 			return;
-		if (use_check_page_before_scanning) {
-			if (!is_page_scanned(page))
-				cmp_and_merge_page(page, rmap_item);
-		} else {
+		if (!is_page_scanned(page))
 			cmp_and_merge_page(page, rmap_item);
 		put_page(page);
 	}
