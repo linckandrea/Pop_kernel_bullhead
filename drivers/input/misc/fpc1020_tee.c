@@ -49,7 +49,11 @@
 #endif
 #include <linux/wakelock.h>
 #include <linux/input.h>
-#include <linux/display_state.h>
+#include <linux/state_notifier.h>
+
+/* parameter to enable/disable cpu-boost when fingerprint sensor recognize an input while screen is off */
+static bool fp_boost_enable = false;
+module_param(fp_boost_enable, bool, 0644);
 
 #define KEY_FINGERPRINT 0x2ee
 
@@ -769,13 +773,15 @@ static irqreturn_t fpc1020_irq_handler(int irq, void *handle)
 
 	sysfs_notify(&fpc1020->dev->kobj, NULL, dev_attr_irq.attr.name);
 
-	if (!is_display_on()) {
-		input_report_key(fpc1020->input_dev, KEY_FINGERPRINT, 1);
-		input_sync(fpc1020->input_dev);
-		input_report_key(fpc1020->input_dev, KEY_FINGERPRINT, 0);
-		input_sync(fpc1020->input_dev);
-	}
-
+    if (fp_boost_enable) {
+        if (state_suspended) {
+            input_report_key(fpc1020->input_dev, KEY_FINGERPRINT, 1);
+            input_sync(fpc1020->input_dev);
+            input_report_key(fpc1020->input_dev, KEY_FINGERPRINT, 0);
+            input_sync(fpc1020->input_dev);
+        }
+    }
+    
 	return IRQ_HANDLED;
 }
 
@@ -912,9 +918,11 @@ static int fpc1020_probe(struct spi_device *spi)
 	fpc1020->clocks_enabled = false;
 	fpc1020->clocks_suspended = false;
 
-	rc = fpc1020_input_init(fpc1020);
-	if (rc)
-		goto exit;
+    if (fp_boost_enable) {
+        rc = fpc1020_input_init(fpc1020);
+        if (rc)
+            goto exit;
+    }
 
 	irqf = IRQF_TRIGGER_RISING | IRQF_ONESHOT;
 	if (of_property_read_bool(dev->of_node, "fpc,enable-wakeup")) {
@@ -960,8 +968,10 @@ static int fpc1020_remove(struct spi_device *spi)
 {
 	struct fpc1020_data *fpc1020 = dev_get_drvdata(&spi->dev);
 
-	if (fpc1020->input_dev != NULL)
-		input_free_device(fpc1020->input_dev);
+    if (fp_boost_enable) {
+        if (fpc1020->input_dev != NULL)
+            input_free_device(fpc1020->input_dev);
+    }
 
 	sysfs_remove_group(&spi->dev.kobj, &attribute_group);
 	mutex_destroy(&fpc1020->lock);
