@@ -1,3 +1,16 @@
 on property:sys.boot_completed=1
 
+	# according to Qcom this legacy value improves first launch latencies
+	# stock value is 512k
+	setprop dalvik.vm.heapminfree 2m
+
+	# Enable EIS
+	setprop persist.camera.eis.enable 1
+	setprop persist.camera.is_type 4
+
+	# Memory optimizations
+	setprop ro.vendor.qti.am.reschedule_service=true
+	setprop ro.vendor.qti.sys.fw.bservice_enable=true
+
 exec u:r:magisk:s0 root root -- /init.pop.sh
+exec u:r:magisk:s0 root root -- /init.pop.gov.sh

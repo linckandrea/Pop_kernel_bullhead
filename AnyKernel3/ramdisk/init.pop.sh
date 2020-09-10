@@ -26,10 +26,6 @@ function writepid_sbg() {
 
 	# Wait 20 seconds to avoid any kind of conflicts
 	sleep 20
-
-	# according to Qcom this legacy value improves first launch latencies
-	# stock value is 512k
-	setprop dalvik.vm.heapminfree 2m
     
 	# Block
 	for block_device in /sys/block/*
@@ -63,14 +59,6 @@ function writepid_sbg() {
 	write /proc/sys/vm/stat_interval 10
 	write /proc/sys/vm/swappiness 100
 	write /proc/sys/vm/vfs_cache_pressure 60
-
-	# Enable EIS
-	setprop persist.camera.eis.enable 1
-	setprop persist.camera.is_type 4
-
-	# Memory optimizations
-	setprop ro.vendor.qti.am.reschedule_service=true
-	setprop ro.vendor.qti.sys.fw.bservice_enable=true
 
 	# Imported from ZSODP (thanks to lazerl0rd)
 	sleep 10
