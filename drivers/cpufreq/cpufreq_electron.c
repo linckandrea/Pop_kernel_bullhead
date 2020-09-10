@@ -31,7 +31,7 @@
 #include <linux/kthread.h>
 #include <linux/slab.h>
 #include <linux/kernel_stat.h>
-#include <linux/state_notifier.h>
+#include <linux/display_state.h>
 #include <asm/cputime.h>
 
 #define CREATE_TRACE_POINTS
@@ -440,6 +440,7 @@ static void cpufreq_electron_timer(unsigned long data)
 	int i, fcpu;
 	struct cpufreq_govinfo govinfo;
 	unsigned int this_hispeed_freq;
+	bool display_on = is_display_on();
 
 	if (!down_read_trylock(&ppol->enable_sem))
 		return;
@@ -453,10 +454,10 @@ static void cpufreq_electron_timer(unsigned long data)
 	spin_lock_irqsave(&ppol->load_lock, flags);
 	ppol->last_evaluated_jiffy = get_jiffies_64();
 
-	if (!state_suspended
+	if (display_on
 		&& tunables->timer_rate != tunables->prev_timer_rate)
 		tunables->timer_rate = tunables->prev_timer_rate;
-	else if (state_suspended
+	else if (!display_on
 		&& tunables->timer_rate != SCREEN_OFF_TIMER_RATE) {
 		tunables->prev_timer_rate = tunables->timer_rate;
 		tunables->timer_rate
@@ -513,7 +514,7 @@ static void cpufreq_electron_timer(unsigned long data)
 
 	spin_lock_irqsave(&ppol->target_freq_lock, flags);
 	cpu_load = loadadjfreq / ppol->policy->cur;
-	tunables->boosted = (tunables->boost_val || now < tunables->boostpulse_endtime) && !state_suspended;
+	tunables->boosted = (tunables->boost_val || now < tunables->boostpulse_endtime) && display_on;
 	this_hispeed_freq = max(tunables->hispeed_freq, ppol->policy->min);
 	this_hispeed_freq = min(this_hispeed_freq, ppol->policy->max);
 
@@ -632,6 +633,7 @@ static int cpufreq_electron_speedchange_task(void *data)
 	unsigned long flags;
 	struct cpufreq_electron_policyinfo *ppol;
 	struct cpufreq_electron_tunables *tunables;
+	bool display_on = is_display_on();
 
 	while (1) {
 		set_current_state(TASK_INTERRUPTIBLE);
@@ -662,11 +664,11 @@ static int cpufreq_electron_speedchange_task(void *data)
 				up_read(&ppol->enable_sem);
 				continue;
 			}
-			if (unlikely(state_suspended))
+			if (unlikely(!display_on))
 				if (ppol->target_freq > tunables->screen_off_maxfreq)
 					ppol->target_freq = tunables->screen_off_maxfreq;
 			if (ppol->target_freq != ppol->policy->cur) {
-				if (tunables->powersave_bias || state_suspended)
+				if (tunables->powersave_bias || !display_on)
 					__cpufreq_driver_target(ppol->policy,
 								ppol->target_freq,
 								CPUFREQ_RELATION_C);
