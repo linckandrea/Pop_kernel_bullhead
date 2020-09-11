@@ -60,6 +60,25 @@ function writepid_sbg() {
 	write /proc/sys/vm/swappiness 100
 	write /proc/sys/vm/vfs_cache_pressure 60
 
+	# Sched parameters kanged from ether (nextbit robin)
+	write /proc/sys/kernel/power_aware_timer_migration 1
+	write /proc/sys/kernel/sched_migration_fixup 1
+	write /proc/sys/kernel/sched_small_task 30
+	write /proc/sys/kernel/sched_upmigrate 95
+	write /proc/sys/kernel/sched_downmigrate 85
+	write /proc/sys/kernel/sched_window_stats_policy 2
+	write /proc/sys/kernel/sched_ravg_hist_size 5
+	get-set-forall /sys/devices/system/cpu/*/sched_mostly_idle_load 20
+	get-set-forall /sys/devices/system/cpu/*/sched_mostly_idle_nr_run 3
+	write /proc/sys/kernel/sched_freq_inc_notify 400000
+	write /proc/sys/kernel/sched_freq_dec_notify 400000
+
+	# android background processes are set to nice 10. Never schedule these on the a57s.
+	write /proc/sys/kernel/sched_upmigrate_min_nice 9
+
+	# Disable sched_boost
+	write /proc/sys/kernel/sched_boost 0
+
 	# Imported from ZSODP (thanks to lazerl0rd)
 	sleep 10
 

@@ -10,7 +10,7 @@ function write() {
 
 ################################################################################
 
-	# Wait 20 seconds to avoid any kind of conflicts
+	# Wait 60 seconds to avoid any kind of conflicts
 	sleep 60
 
 	write /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor interactive
