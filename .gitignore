@@ -63,7 +63,9 @@ modules.builtin
 include/config
 include/generated
 arch/*/include/generated
-AnyKernel3/
+AnyKernel3/*
+AnyKernel3/Image.gz-dtb
+AnyKernel3/Pop_kernel-bullhead-O-r*
 
 # stgit generated dirs
 patches-*
