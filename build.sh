@@ -11,8 +11,8 @@ make O=out mrproper
 echo
 echo "Issue Build Commands"
 echo
-export CROSS_COMPILE=/home/andrea/gcc10/arm64-gcc//bin/aarch64-elf-
-export CROSS_COMPILE_ARM32=/home/andrea/gcc10/arm32-gcc//bin/arm-eabi-
+export CROSS_COMPILE=/home/andrea/gcc10/arm64-gcc/bin/aarch64-elf-
+export CROSS_COMPILE_ARM32=/home/andrea/gcc10/arm32-gcc/bin/arm-eabi-
 
 echo
 echo "Set DEFCONFIG"
