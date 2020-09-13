@@ -11,7 +11,12 @@ make O=out mrproper
 echo
 echo "Issue Build Commands"
 echo
+<<<<<<< HEAD
 export CROSS_COMPILE=/home/andrea/android/gcc10/arm64-gcc/bin/aarch64-elf-
+=======
+export CROSS_COMPILE=/home/andrea/gcc10/arm64-gcc/bin/aarch64-elf-
+export CROSS_COMPILE_ARM32=/home/andrea/gcc10/arm32-gcc/bin/arm-eabi-
+>>>>>>> 8980ca9c8448... builds.sh: fix typo
 
 echo
 echo "Set DEFCONFIG"
