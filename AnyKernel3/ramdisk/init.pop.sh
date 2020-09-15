@@ -35,12 +35,6 @@ function writepid_sbg() {
 	write /sys/block/mmcblk0/queue/rotational 0
 	write /sys/block/mmcblk0/queue/add_random 0
 
-	# Adreno idler
-	write /sys/module/adreno_idler/parameters/adreno_idler_active 0
-	write /sys/module/adreno_idler/parameters/adreno_idler_downdifferential 20
-	write /sys/module/adreno_idler/parameters/adreno_idler_idlewait 20
-	write /sys/module/adreno_idler/parameters/adreno_idler_idleworkload 6000
-
 	# Disable KSM by default
 	write /sys/kernel/mm/ksm/run 0
 	write /sys/kernel/mm/ksm/sleep_millisecs 1500
