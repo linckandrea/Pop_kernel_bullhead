@@ -35,12 +35,6 @@ function writepid_sbg() {
 	write /sys/block/mmcblk0/queue/rotational 0
 	write /sys/block/mmcblk0/queue/add_random 0
 
-	# Disable KSM by default
-	write /sys/kernel/mm/ksm/run 0
-	write /sys/kernel/mm/ksm/sleep_millisecs 1500
-	write /sys/kernel/mm/ksm/pages_to_scan 512
-	write /sys/kernel/mm/ksm/deferred_timer 1
-
 	# Zram tweaks
 	write /sys/block/zram0/max_comp_streams 4
 
