@@ -10,8 +10,8 @@ function write() {
 
 ################################################################################
 
-	# Wait 60 seconds to avoid any kind of conflicts
-	sleep 60
+	# Wait 25 seconds to avoid any kind of conflicts
+	sleep 25
 
 	write /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor interactive
 	write /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq 384000

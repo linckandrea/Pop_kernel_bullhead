@@ -24,9 +24,7 @@ function writepid_sbg() {
 
 ################################################################################
 
-	# Wait 20 seconds to avoid any kind of conflicts
-	sleep 20
-    
+function firststage() {
 	# Block
 	for block_device in /sys/block/*
 	do
@@ -34,19 +32,6 @@ function writepid_sbg() {
 	done
 	write /sys/block/mmcblk0/queue/rotational 0
 	write /sys/block/mmcblk0/queue/add_random 0
-
-	# Zram tweaks
-	write /sys/block/zram0/max_comp_streams 4
-
-	# VM
-	write /proc/sys/vm/dirty_background_ratio 10
-	write /proc/sys/vm/dirty_ratio 30
-	write /proc/sys/vm/dirty_expire_centisecs 3000
-	write /proc/sys/vm/dirty_writeback_centisecs 3000
-	write /proc/sys/vm/page-cluster 0
-	write /proc/sys/vm/stat_interval 10
-	write /proc/sys/vm/swappiness 100
-	write /proc/sys/vm/vfs_cache_pressure 60
 
 	# Sched parameters kanged from ether (nextbit robin)
 	write /proc/sys/kernel/power_aware_timer_migration 1
@@ -67,8 +52,22 @@ function writepid_sbg() {
 	# Disable sched_boost
 	write /proc/sys/kernel/sched_boost 0
 
+	# Zram tweaks
+	write /sys/block/zram0/max_comp_streams 4
+
+	# VM
+	write /proc/sys/vm/dirty_background_ratio 10
+	write /proc/sys/vm/dirty_ratio 30
+	write /proc/sys/vm/dirty_expire_centisecs 3000
+	write /proc/sys/vm/dirty_writeback_centisecs 3000
+	write /proc/sys/vm/page-cluster 0
+	write /proc/sys/vm/stat_interval 10
+	write /proc/sys/vm/swappiness 100
+	write /proc/sys/vm/vfs_cache_pressure 60
+}
+
+{
 	# Imported from ZSODP (thanks to lazerl0rd)
-	sleep 10
 
 	LOGCAT=`pidof logcat`
 	RMT_STORAGE=`pidof rmt_storage`
@@ -99,3 +98,7 @@ function writepid_sbg() {
 	writepid_sbg $CND
 	writepid_sbg $IMSQMIDAEMON
 	writepid_sbg $IMSDATADAEMON
+
+	sleep 15
+	firststage
+}&
