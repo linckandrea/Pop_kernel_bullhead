@@ -595,6 +595,9 @@ KBUILD_CFLAGS += $(call cc-disable-warning, format-truncation) \
 		 $(call cc-disable-warning, maybe-uninitialized,) \
 		 $(call cc-disable-warning, unused-const-variable)
 
+# Fix gcc10 performance regression
+#KBUILD_CFLAGS += --param=max-inline-insns-auto=1000
+
 include $(srctree)/arch/$(SRCARCH)/Makefile
 
 ifdef CONFIG_READABLE_ASM
